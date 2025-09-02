@@ -4,7 +4,7 @@ import { PROFILE } from '../constants';
 
 const Contact: React.FC = () => {
   return (
-    <section id="contact" className="py-24 text-center animate-fade-in-up" style={{ animationDelay: '800ms', opacity: 0 }}>
+    <section id="contact" className="py-24 text-center animate-fade-in-up" style={{ animationDelay: '800ms' }}>
       <div className="text-center mb-12">
         <h2 className="text-4xl font-bold">Get In Touch</h2>
          <div className="w-20 h-1 bg-accent mx-auto mt-2"></div>

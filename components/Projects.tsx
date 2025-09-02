@@ -5,7 +5,7 @@ import ProjectCard from './ProjectCard';
 
 const Projects: React.FC = () => {
   return (
-    <section id="projects" className="py-24 animate-fade-in-up" style={{ animationDelay: '400ms', opacity: 0 }}>
+    <section id="projects" className="py-24 animate-fade-in-up" style={{ animationDelay: '400ms' }}>
       <div className="text-center mb-12">
         <h2 className="text-4xl font-bold">My Projects</h2>
         <p className="text-lg text-text-secondary mt-2">A selection of my recent work.</p>

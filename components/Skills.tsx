@@ -4,7 +4,7 @@ import { SKILLS } from '../constants';
 
 const Skills: React.FC = () => {
   return (
-    <section id="skills" className="py-24 animate-fade-in-up" style={{ animationDelay: '600ms', opacity: 0 }}>
+    <section id="skills" className="py-24 animate-fade-in-up" style={{ animationDelay: '600ms' }}>
       <div className="text-center mb-12">
         <h2 className="text-4xl font-bold">Technical Skills</h2>
         <p className="text-lg text-text-secondary mt-2">Technologies I'm proficient with.</p>

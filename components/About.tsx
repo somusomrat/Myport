@@ -3,7 +3,7 @@ import React from 'react';
 
 const About: React.FC = () => {
   return (
-    <section id="about" className="py-24 animate-fade-in-up" style={{ animationDelay: '200ms', opacity: 0 }}>
+    <section id="about" className="py-24 animate-fade-in-up" style={{ animationDelay: '200ms' }}>
       <div className="text-center mb-12">
         <h2 className="text-4xl font-bold">About Me</h2>
         <div className="w-20 h-1 bg-accent mx-auto mt-2"></div>
