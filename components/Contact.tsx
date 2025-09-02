@@ -1,8 +1,11 @@
-
 import React from 'react';
-import { PROFILE } from '../constants';
+import type { PROFILE as ProfileType } from '../constants';
 
-const Contact: React.FC = () => {
+interface ContactProps {
+  profile: typeof ProfileType;
+}
+
+const Contact: React.FC<ContactProps> = ({ profile }) => {
   return (
     <section id="contact" className="py-24 text-center animate-fade-in-up" style={{ animationDelay: '800ms' }}>
       <div className="text-center mb-12">
@@ -13,7 +16,7 @@ const Contact: React.FC = () => {
         I'm currently open to new opportunities and collaborations. If you have a project in mind or just want to say hi, feel free to reach out!
       </p>
       <a
-        href={`mailto:${PROFILE.email}`}
+        href={`mailto:${profile.email}`}
         className="inline-block bg-accent text-primary text-lg font-semibold py-4 px-10 rounded-full hover:bg-white transition-all duration-300 shadow-lg"
       >
         Say Hello
