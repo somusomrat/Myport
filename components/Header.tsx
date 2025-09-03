@@ -21,10 +21,12 @@ interface HeaderProps {
     onLogout: () => void;
     isEditing: boolean;
     setIsEditing: (isEditing: boolean) => void;
+    onExport: () => void;
+    onImport: () => void;
 }
 
 
-const Header: React.FC<HeaderProps> = ({ profile, isAuthenticated, onLogin, onLogout, isEditing, setIsEditing }) => {
+const Header: React.FC<HeaderProps> = ({ profile, isAuthenticated, onLogin, onLogout, isEditing, setIsEditing, onExport, onImport }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
 
@@ -54,6 +56,12 @@ const Header: React.FC<HeaderProps> = ({ profile, isAuthenticated, onLogin, onLo
         <div className="hidden md:flex items-center space-x-4">
             {isAuthenticated ? (
                 <>
+                    {isEditing && (
+                      <div className="flex items-center space-x-2">
+                        <button onClick={onImport} className="bg-gray-700 text-white font-semibold py-2 px-4 rounded-md hover:bg-gray-600 transition-all duration-300 text-sm">Import</button>
+                        <button onClick={onExport} className="bg-gray-700 text-white font-semibold py-2 px-4 rounded-md hover:bg-gray-600 transition-all duration-300 text-sm">Export</button>
+                      </div>
+                    )}
                     <div className="flex items-center space-x-2">
                         <span className={`text-sm ${isEditing ? 'text-accent' : 'text-text-secondary'}`}>{isEditing ? 'Edit Mode' : 'View Mode'}</span>
                          <label htmlFor="edit-toggle" className="flex items-center cursor-pointer">
@@ -77,25 +85,43 @@ const Header: React.FC<HeaderProps> = ({ profile, isAuthenticated, onLogin, onLo
 
 
         <div className="md:hidden">
-          <button onClick={() => setIsOpen(!isOpen)} className="text-text-primary z-50">
+          <button onClick={() => setIsOpen(!isOpen)} className="text-text-primary">
             {isOpen ? <CloseIcon /> : <MenuIcon />}
           </button>
         </div>
       </div>
       
       {/* Mobile Menu */}
-      <div className={`md:hidden fixed top-0 right-0 h-full w-2/3 bg-secondary/95 backdrop-blur-lg transition-transform duration-300 ease-in-out ${isOpen ? 'translate-x-0' : 'translate-x-full'} animate-slide-in`}>
+      <div className={`md:hidden fixed top-0 right-0 h-full w-2/3 bg-secondary/95 backdrop-blur-lg transition-transform duration-300 ease-in-out z-40 ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}>
           <div className="flex flex-col items-center justify-center h-full space-y-8">
               {NAV_LINKS.map((link) => (
                   <a key={link.name} href={link.href} onClick={() => setIsOpen(false)} className="text-2xl text-text-primary font-medium hover:text-accent transition-colors duration-300">
                       {link.name}
                   </a>
               ))}
-              <div className="mt-8">
+              <div className="mt-8 flex flex-col items-center space-y-6">
                  {isAuthenticated ? (
-                    <button onClick={() => { onLogout(); setIsOpen(false); }} className="bg-accent/20 text-accent font-semibold py-3 px-6 rounded-md hover:bg-accent/40 transition-all duration-300">
-                        Logout
-                    </button>
+                    <>
+                       <div className="flex items-center space-x-2">
+                          <span className={`text-sm ${isEditing ? 'text-accent' : 'text-text-secondary'}`}>{isEditing ? 'Edit Mode' : 'View Mode'}</span>
+                           <label htmlFor="mobile-edit-toggle" className="flex items-center cursor-pointer">
+                              <div className="relative">
+                                  <input type="checkbox" id="mobile-edit-toggle" className="sr-only" checked={isEditing} onChange={() => setIsEditing(!isEditing)} />
+                                  <div className="block bg-gray-600 w-10 h-6 rounded-full"></div>
+                                  <div className={`dot absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition-transform ${isEditing ? 'transform translate-x-full bg-accent' : ''}`}></div>
+                              </div>
+                          </label>
+                      </div>
+                       {isEditing && (
+                         <div className="flex flex-col items-center space-y-4">
+                           <button onClick={() => { onImport(); setIsOpen(false); }} className="bg-gray-700 text-white font-semibold py-3 px-6 rounded-md hover:bg-gray-600 transition-all duration-300 w-full">Import Data</button>
+                           <button onClick={() => { onExport(); setIsOpen(false); }} className="bg-gray-700 text-white font-semibold py-3 px-6 rounded-md hover:bg-gray-600 transition-all duration-300 w-full">Export Data</button>
+                         </div>
+                       )}
+                      <button onClick={() => { onLogout(); setIsOpen(false); }} className="bg-accent/20 text-accent font-semibold py-3 px-6 rounded-md hover:bg-accent/40 transition-all duration-300">
+                          Logout
+                      </button>
+                    </>
                 ) : (
                     <button onClick={() => { onLogin(); setIsOpen(false); }} className="bg-accent text-primary font-semibold py-3 px-6 rounded-md hover:bg-white transition-all duration-300">
                         Login to Edit

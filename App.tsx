@@ -79,6 +79,60 @@ const App: React.FC = () => {
     setIsAuthenticated(false);
     setIsEditing(false);
   };
+
+  const handleExport = () => {
+    const data = {
+      profile,
+      projects,
+      skills,
+      aboutContent,
+    };
+    const jsonString = `data:text/json;charset=utf-8,${encodeURIComponent(
+      JSON.stringify(data, null, 2)
+    )}`;
+    const link = document.createElement("a");
+    link.href = jsonString;
+    link.download = "portfolio-data.json";
+    link.click();
+    alert('Portfolio data exported!');
+  };
+
+  const handleImport = () => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.json';
+    input.onchange = (event) => {
+         const file = (event.target as HTMLInputElement).files?.[0];
+         if (!file) return;
+
+         if (window.confirm('Are you sure you want to import this data? This will overwrite your current portfolio.')) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const text = e.target?.result;
+                    if (typeof text === 'string') {
+                        const data = JSON.parse(text);
+                        // Basic validation
+                        if (data.profile && data.projects && data.skills && data.aboutContent) {
+                          setProfile(data.profile);
+                          setProjects(data.projects);
+                          setSkills(data.skills);
+                          setAboutContent(data.aboutContent);
+                          alert('Data imported successfully!');
+                        } else {
+                          alert('Invalid data file. Please check the file format.');
+                        }
+                    }
+                } catch (error) {
+                    console.error("Failed to parse JSON file", error);
+                    alert('Failed to import data. The file might be corrupted.');
+                }
+            };
+            reader.readAsText(file);
+         }
+    };
+    input.click();
+  };
   
   if (isLoading) {
     return <Intro name={profile.name} />;
@@ -93,6 +147,8 @@ const App: React.FC = () => {
         onLogout={handleLogout}
         isEditing={isEditing}
         setIsEditing={setIsEditing}
+        onExport={handleExport}
+        onImport={handleImport}
       />
       <main className="container mx-auto px-4 md:px-8 lg:px-16">
         <Hero 
