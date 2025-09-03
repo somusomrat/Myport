@@ -1,5 +1,4 @@
 import React from 'react';
-import { SOCIAL_LINKS } from '../constants';
 import type { PROFILE as ProfileType } from '../constants';
 
 interface FooterProps {
@@ -18,13 +17,13 @@ const Footer: React.FC<FooterProps> = ({ profile }) => {
           <p className="text-text-secondary">&copy; {new Date().getFullYear()} {profile.name}. All rights reserved.</p>
         </div>
         <div className="flex space-x-6">
-          <a href={SOCIAL_LINKS.github} target="_blank" rel="noopener noreferrer" className="text-text-secondary hover:text-accent transition-colors">
+          <a href={profile.social.github} target="_blank" rel="noopener noreferrer" className="text-text-secondary hover:text-accent transition-colors">
             <GithubIcon />
           </a>
-          <a href={SOCIAL_LINKS.linkedin} target="_blank" rel="noopener noreferrer" className="text-text-secondary hover:text-accent transition-colors">
+          <a href={profile.social.linkedin} target="_blank" rel="noopener noreferrer" className="text-text-secondary hover:text-accent transition-colors">
             <LinkedinIcon />
           </a>
-           <a href={SOCIAL_LINKS.twitter} target="_blank" rel="noopener noreferrer" className="text-text-secondary hover:text-accent transition-colors">
+           <a href={profile.social.twitter} target="_blank" rel="noopener noreferrer" className="text-text-secondary hover:text-accent transition-colors">
             <TwitterIcon />
           </a>
         </div>

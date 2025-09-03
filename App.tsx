@@ -7,7 +7,9 @@ import Skills from './components/Skills';
 import Contact from './components/Contact';
 import Footer from './components/Footer';
 import Intro from './components/Intro';
-import { PROFILE, PROJECTS, SKILLS, SOCIAL_LINKS, NAV_LINKS } from './constants';
+import { PROFILE, PROJECTS, SKILLS, ABOUT_CONTENT } from './constants';
+import type { AboutContent } from './types';
+
 
 const App: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
@@ -17,16 +19,20 @@ const App: React.FC = () => {
   const [profile, setProfile] = useState(PROFILE);
   const [projects, setProjects] = useState(PROJECTS);
   const [skills, setSkills] = useState(SKILLS);
+  const [aboutContent, setAboutContent] = useState<AboutContent>(ABOUT_CONTENT);
+
 
   useEffect(() => {
     // Load data from localStorage
     const savedProfile = localStorage.getItem('portfolio-profile');
     const savedProjects = localStorage.getItem('portfolio-projects');
     const savedSkills = localStorage.getItem('portfolio-skills');
+    const savedAbout = localStorage.getItem('portfolio-about');
 
     if (savedProfile) setProfile(JSON.parse(savedProfile));
     if (savedProjects) setProjects(JSON.parse(savedProjects));
     if (savedSkills) setSkills(JSON.parse(savedSkills));
+    if (savedAbout) setAboutContent(JSON.parse(savedAbout));
 
     // Intro screen timer
     const timer = setTimeout(() => setIsLoading(false), 2500);
@@ -52,10 +58,16 @@ const App: React.FC = () => {
     }
   }, [skills, isLoading]);
 
+  useEffect(() => {
+    if(!isLoading) {
+      localStorage.setItem('portfolio-about', JSON.stringify(aboutContent));
+    }
+  }, [aboutContent, isLoading]);
+
   const handleLogin = () => {
     // In a real app, use a proper auth system.
     const pass = prompt('Enter password to edit:');
-    if (pass === 'admin') { // Replace 'admin' with your desired password
+    if (pass === 'weare1ummah') { // Use the user-provided password
       setIsAuthenticated(true);
       setIsEditing(true);
     } else {
@@ -75,6 +87,7 @@ const App: React.FC = () => {
   return (
     <div className="bg-primary text-text-primary min-h-screen font-sans">
       <Header 
+        profile={profile}
         isAuthenticated={isAuthenticated}
         onLogin={handleLogin}
         onLogout={handleLogout}
@@ -87,7 +100,11 @@ const App: React.FC = () => {
           setProfile={setProfile} 
           isEditing={isEditing} 
         />
-        <About isEditing={isEditing} />
+        <About 
+          isEditing={isEditing} 
+          content={aboutContent}
+          setContent={setAboutContent}
+        />
         <Projects 
           projects={projects}
           setProjects={setProjects}

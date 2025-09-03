@@ -1,26 +1,13 @@
-import React, { useState, useRef } from 'react';
+import React, { useRef } from 'react';
+import type { AboutContent } from '../types';
 
 interface AboutProps {
   isEditing: boolean;
+  content: AboutContent;
+  setContent: (content: AboutContent) => void;
 }
 
-const initialContent = {
-  img: "https://picsum.photos/seed/about/600/600",
-  p1: "Hello! I'm a dedicated frontend developer with a passion for building intuitive, high-performance web applications. My journey into web development started years ago, and since then, I've been hooked on turning complex problems into elegant, user-friendly solutions.",
-  p2: "I thrive in collaborative environments and enjoy working with cross-functional teams to bring ideas to life. My expertise lies in the React ecosystem, where I leverage tools like Next.js, Redux, and TypeScript to create robust and scalable applications.",
-  p3: "When I'm not coding, you can find me exploring new technologies, contributing to open-source projects, or enjoying a good cup of coffee. I'm always eager to learn and take on new challenges."
-}
-
-const About: React.FC<AboutProps> = ({ isEditing }) => {
-  const [content, setContent] = useState(() => {
-    const savedContent = localStorage.getItem('portfolio-about');
-    return savedContent ? JSON.parse(savedContent) : initialContent;
-  });
-
-  React.useEffect(() => {
-    localStorage.setItem('portfolio-about', JSON.stringify(content));
-  }, [content]);
-
+const About: React.FC<AboutProps> = ({ isEditing, content, setContent }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -34,8 +21,8 @@ const About: React.FC<AboutProps> = ({ isEditing }) => {
     }
   };
 
-  const handleTextChange = (field: string, value: string) => {
-    setContent(prev => ({...prev, [field]: value}));
+  const handleTextChange = (field: keyof AboutContent, value: string) => {
+    setContent({ ...content, [field]: value });
   }
 
   return (

@@ -1,5 +1,4 @@
-
-import type { Project, SkillCategory } from './types';
+import type { Project, SkillCategory, AboutContent } from './types';
 
 export const PROFILE = {
   name: 'Alex Doe',
@@ -7,6 +6,11 @@ export const PROFILE = {
   bio: 'I am a passionate frontend developer with a knack for creating beautiful, functional, and user-centered web applications. With over 8 years of experience, I specialize in the React ecosystem, TypeScript, and modern web technologies.',
   email: 'hello@alexdoe.dev',
   avatar: 'https://i.pravatar.cc/300?u=alexdoe',
+  social: {
+    github: 'https://github.com',
+    linkedin: 'https://linkedin.com',
+    twitter: 'https://twitter.com',
+  }
 };
 
 export const PROJECTS: Project[] = [
@@ -58,10 +62,11 @@ export const SKILLS: SkillCategory[] = [
   },
 ];
 
-export const SOCIAL_LINKS = {
-  github: 'https://github.com',
-  linkedin: 'https://linkedin.com',
-  twitter: 'https://twitter.com',
+export const ABOUT_CONTENT: AboutContent = {
+  img: "https://picsum.photos/seed/about/600/600",
+  p1: "Hello! I'm a dedicated frontend developer with a passion for building intuitive, high-performance web applications. My journey into web development started years ago, and since then, I've been hooked on turning complex problems into elegant, user-friendly solutions.",
+  p2: "I thrive in collaborative environments and enjoy working with cross-functional teams to bring ideas to life. My expertise lies in the React ecosystem, where I leverage tools like Next.js, Redux, and TypeScript to create robust and scalable applications.",
+  p3: "When I'm not coding, you can find me exploring new technologies, contributing to open-source projects, or enjoying a good cup of coffee. I'm always eager to learn and take on new challenges."
 };
 
 export const NAV_LINKS = [
