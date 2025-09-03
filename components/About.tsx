@@ -1,5 +1,6 @@
 import React, { useRef, useState } from 'react';
 import type { AboutContent } from '../types';
+import { SpinnerIcon } from './Icons';
 
 interface AboutProps {
   isEditing: boolean;
@@ -61,7 +62,7 @@ const About: React.FC<AboutProps> = ({ isEditing, content, setContent }) => {
           <img src={content.img} alt="About Me" className="rounded-lg shadow-xl w-full" />
            {isUploading && (
              <div className="absolute inset-0 rounded-lg bg-black/80 flex items-center justify-center text-white">
-                <span>Uploading...</span>
+                <SpinnerIcon />
              </div>
            )}
           {isEditing && !isUploading && (

@@ -37,7 +37,7 @@ const App: React.FC = () => {
     if (hash && hash.startsWith('#live=')) {
       const binId = hash.substring(6);
       setIsLoading(true); // Show loading screen while fetching
-      fetch(`https://api.npoint.io/${binId}`)
+      fetch(`https://jsonblob.com/api/jsonBlob/${binId}`)
         .then(response => {
           if (!response.ok) {
             throw new Error('Network response was not ok');
@@ -117,18 +117,22 @@ const App: React.FC = () => {
 
   const handleCloudSync = async () => {
     const dataToSync = { profile, projects, skills, aboutContent };
-    const endpoint = cloudBinId ? `https://api.npoint.io/${cloudBinId}` : 'https://api.npoint.io/bins';
+    const endpoint = cloudBinId ? `https://jsonblob.com/api/jsonBlob/${cloudBinId}` : 'https://jsonblob.com/api/jsonBlob';
     const method = cloudBinId ? 'PUT' : 'POST';
 
     try {
         const response = await fetch(endpoint, {
             method: method,
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 
+              'Content-Type': 'application/json',
+              'Accept': 'application/json'
+            },
             body: JSON.stringify(dataToSync),
         });
 
         if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
+            const errorBody = await response.text();
+            throw new Error(`HTTP error! status: ${response.status}, body: ${errorBody}`);
         }
 
         if (cloudBinId) {
@@ -138,21 +142,27 @@ const App: React.FC = () => {
               `${window.location.origin}${window.location.pathname}#live=${cloudBinId}`
             );
         } else {
-            const result = await response.json();
-            const newBinId = result.id;
-            if (newBinId) {
-                setCloudBinId(newBinId);
-                localStorage.setItem('portfolio-cloud-bin-id', newBinId);
-                alert('✅ First sync successful! A permanent link has been created for you.');
-                prompt(
-                  "HERE IS YOUR PERMANENT LINK\n\nSave this link! Share it with your friends. They will always see your latest synced version here.",
-                  `${window.location.origin}${window.location.pathname}#live=${newBinId}`
-                );
+            const newBinLocation = response.headers.get('Location');
+            if (newBinLocation) {
+                const newBinId = newBinLocation.split('/').pop();
+                if (newBinId) {
+                    setCloudBinId(newBinId);
+                    localStorage.setItem('portfolio-cloud-bin-id', newBinId);
+                    alert('✅ First sync successful! A permanent link has been created for you.');
+                    prompt(
+                      "HERE IS YOUR PERMANENT LINK\n\nSave this link! Share it with your friends. They will always see your latest synced version here.",
+                      `${window.location.origin}${window.location.pathname}#live=${newBinId}`
+                    );
+                } else {
+                    throw new Error("Could not extract new ID from response.");
+                }
+            } else {
+                 throw new Error("Could not find the location of the new data store from response headers.");
             }
         }
     } catch (error) {
         console.error("Cloud sync failed:", error);
-        alert('❌ Failed to sync to the cloud. Please try again.');
+        alert(`❌ Failed to sync to the cloud. Please try again.\n\nError: ${error instanceof Error ? error.message : String(error)}`);
     }
   };
 
