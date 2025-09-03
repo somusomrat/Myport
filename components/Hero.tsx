@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState } from 'react';
 import type { PROFILE as ProfileType } from '../constants';
 
 const GithubIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path></svg>;
@@ -12,17 +12,43 @@ interface HeroProps {
 
 const Hero: React.FC<HeroProps> = ({ profile, setProfile, isEditing }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  
+  // This is a public, free-to-use API key for imgbb.
+  const IMGBB_API_KEY = 'd70457833a251b14a2754388439e7b2f';
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setProfile({ ...profile, avatar: reader.result as string });
-      };
-      reader.readAsDataURL(file);
+    if (!file) return;
+
+    setIsUploading(true);
+    const formData = new FormData();
+    formData.append('image', file);
+
+    try {
+      const response = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error('Image upload failed');
+      }
+
+      const result = await response.json();
+      if (result.data && result.data.url) {
+        setProfile({ ...profile, avatar: result.data.url });
+      } else {
+        throw new Error('Image URL not found in response');
+      }
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      alert('Failed to upload image. Please try another image or try again later.');
+    } finally {
+      setIsUploading(false);
     }
   };
+
 
   const handleInputChange = (field: keyof typeof ProfileType, value: string) => {
     setProfile({ ...profile, [field]: value });
@@ -41,7 +67,12 @@ const Hero: React.FC<HeroProps> = ({ profile, setProfile, isEditing }) => {
             alt={profile.name}
             className="w-full h-full rounded-full border-4 border-accent shadow-lg"
           />
-          {isEditing && (
+          {isUploading && (
+             <div className="absolute inset-0 rounded-full bg-black/80 flex items-center justify-center text-white">
+                <span>Uploading...</span>
+             </div>
+          )}
+          {isEditing && !isUploading && (
             <div 
               className="absolute inset-0 rounded-full bg-black/60 flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
               onClick={() => fileInputRef.current?.click()}

@@ -14,20 +14,45 @@ const GithubIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="20" heig
 const ProjectCard: React.FC<ProjectCardProps> = ({ project, isEditing, onDelete, onUpdate }) => {
   const [isCardEditing, setIsCardEditing] = useState(false);
   const [editedProject, setEditedProject] = useState(project);
+  const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // This is a public, free-to-use API key for imgbb.
+  const IMGBB_API_KEY = 'd70457833a251b14a2754388439e7b2f';
 
   useEffect(() => {
     setEditedProject(project);
   }, [project]);
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setEditedProject({ ...editedProject, image: reader.result as string });
-      };
-      reader.readAsDataURL(file);
+    if (!file) return;
+
+    setIsUploading(true);
+    const formData = new FormData();
+    formData.append('image', file);
+
+    try {
+      const response = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error('Image upload failed');
+      }
+
+      const result = await response.json();
+      if (result.data && result.data.url) {
+        setEditedProject({ ...editedProject, image: result.data.url });
+      } else {
+        throw new Error('Image URL not found in response');
+      }
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      alert('Failed to upload image. Please try another image or try again later.');
+    } finally {
+      setIsUploading(false);
     }
   };
   
@@ -44,14 +69,20 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project, isEditing, onDelete,
   const renderEditingView = () => (
      <div className="bg-secondary rounded-lg overflow-hidden border border-accent shadow-lg p-6 space-y-4">
         <div className="relative group w-full h-56 mb-4">
-             <img src={editedProject.image} alt={editedProject.title} className="w-full h-full object-cover rounded-md" />
-             <div 
-                className="absolute inset-0 rounded-md bg-black/60 flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
-                onClick={() => fileInputRef.current?.click()}
-             >
-                <span>Upload Image</span>
-                <input type="file" ref={fileInputRef} onChange={handleImageUpload} className="hidden" accept="image/*"/>
-             </div>
+            <img src={editedProject.image} alt={editedProject.title} className="w-full h-full object-cover rounded-md" />
+            {isUploading ? (
+               <div className="absolute inset-0 rounded-md bg-black/80 flex items-center justify-center text-white">
+                    <span>Uploading...</span>
+               </div>
+            ) : (
+               <div 
+                  className="absolute inset-0 rounded-md bg-black/60 flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                  onClick={() => fileInputRef.current?.click()}
+               >
+                  <span>Upload Image</span>
+                  <input type="file" ref={fileInputRef} onChange={handleImageUpload} className="hidden" accept="image/*"/>
+               </div>
+            )}
         </div>
         <input type="text" value={editedProject.title} onChange={(e) => setEditedProject({...editedProject, title: e.target.value})} className="w-full bg-primary p-2 rounded-md text-2xl font-bold text-accent" placeholder="Project Title" />
         <textarea value={editedProject.description} onChange={(e) => setEditedProject({...editedProject, description: e.target.value})} className="w-full bg-primary p-2 rounded-md h-24 resize-none" placeholder="Project Description" />
