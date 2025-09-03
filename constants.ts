@@ -17,7 +17,7 @@ export const PROJECTS: Project[] = [
   {
     title: 'E-Commerce Platform',
     description: 'A full-featured e-commerce website with a modern design, product filtering, shopping cart, and checkout process, built with Next.js and Tailwind CSS.',
-    image: 'https://picsum.photos/seed/ecom/600/400',
+    images: ['https://picsum.photos/seed/ecom/600/400'],
     tags: ['React', 'Next.js', 'TypeScript', 'Tailwind CSS', 'Stripe'],
     liveUrl: '#',
     repoUrl: '#',
@@ -25,14 +25,14 @@ export const PROJECTS: Project[] = [
   {
     title: 'Data Visualization Dashboard',
     description: 'An interactive dashboard for visualizing complex datasets using D3.js and Recharts, providing insights through dynamic charts and graphs.',
-    image: 'https://picsum.photos/seed/dash/600/400',
+    images: ['https://picsum.photos/seed/dash/600/400'],
     tags: ['React', 'TypeScript', 'D3.js', 'Recharts', 'Styled-Components'],
     liveUrl: '#',
   },
   {
     title: 'Project Management Tool',
     description: 'A collaborative project management application with features like drag-and-drop tasks, real-time updates, and user authentication using Firebase.',
-    image: 'https://picsum.photos/seed/pmtool/600/400',
+    images: ['https://picsum.photos/seed/pmtool/600/400'],
     tags: ['React', 'Firebase', 'Redux', 'Material-UI'],
     liveUrl: '#',
     repoUrl: '#',
@@ -40,7 +40,7 @@ export const PROJECTS: Project[] = [
    {
     title: 'AI-Powered Content Generator',
     description: 'A web app that leverages the Gemini API to generate creative content, from blog posts to social media captions, based on user prompts.',
-    image: 'https://picsum.photos/seed/aigen/600/400',
+    images: ['https://picsum.photos/seed/aigen/600/400'],
     tags: ['React', 'Gemini API', 'Node.js', 'Express', 'Tailwind CSS'],
     liveUrl: '#',
     repoUrl: '#',

@@ -14,44 +14,61 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project, isEditing, onDelete,
   const [editedProject, setEditedProject] = useState(project);
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
-  // This is a public, free-to-use API key for imgbb.
-  const IMGBB_API_KEY = 'd70457833a251b14a2754388439e7b2f';
+
+  // This is a public, free-to-use API key for freeimage.host.
+  const FREEIMAGE_API_KEY = '6d207e02198a847aa98d0a2a901485a5';
 
   useEffect(() => {
     setEditedProject(project);
+    setCurrentImageIndex(0);
   }, [project]);
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
 
     setIsUploading(true);
-    const formData = new FormData();
-    formData.append('image', file);
+    const uploadedUrls: string[] = [];
 
-    try {
-      const response = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, {
-        method: 'POST',
-        body: formData,
-      });
-
-      if (!response.ok) {
-        throw new Error('Image upload failed');
-      }
-
-      const result = await response.json();
-      if (result.data && result.data.url) {
-        setEditedProject({ ...editedProject, image: result.data.url });
-      } else {
-        throw new Error('Image URL not found in response');
-      }
-    } catch (error) {
-      console.error('Error uploading image:', error);
-      alert('Failed to upload image. Please try another image or try again later.');
-    } finally {
-      setIsUploading(false);
+    for (const file of Array.from(files)) {
+        const formData = new FormData();
+        formData.append('source', file);
+        try {
+            const response = await fetch(`https://freeimage.host/api/1/upload?key=${FREEIMAGE_API_KEY}`, {
+                method: 'POST',
+                body: formData,
+            });
+            const result = await response.json();
+            if (!response.ok) {
+                throw new Error(result?.error?.message || `Image upload failed`);
+            }
+            if (result.image && result.image.url) {
+                uploadedUrls.push(result.image.url);
+            } else {
+                throw new Error('Image URL not found in API response.');
+            }
+        } catch (error) {
+            console.error('Error uploading image:', error);
+            alert(`Failed to upload one or more images: ${error instanceof Error ? error.message : String(error)}`);
+            break; 
+        }
     }
+    
+    if (uploadedUrls.length > 0) {
+        setEditedProject(prev => ({ ...prev, images: [...(prev.images || []), ...uploadedUrls] }));
+    }
+    setIsUploading(false);
+    // Reset file input value to allow re-uploading the same file
+    if (e.target) e.target.value = '';
+  };
+
+  const handleDeleteImage = (indexToDelete: number) => {
+    setEditedProject(prev => ({
+      ...prev,
+      images: prev.images.filter((_, index) => index !== indexToDelete)
+    }));
   };
   
   const handleSave = () => {
@@ -64,24 +81,40 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project, isEditing, onDelete,
     setIsCardEditing(false);
   }
 
+  const nextImage = () => {
+    if (project.images && project.images.length > 1) {
+      setCurrentImageIndex((prevIndex) => (prevIndex + 1) % project.images.length);
+    }
+  };
+
+  const prevImage = () => {
+    if (project.images && project.images.length > 1) {
+      setCurrentImageIndex((prevIndex) => (prevIndex - 1 + project.images.length) % project.images.length);
+    }
+  };
+
   const renderEditingView = () => (
      <div className="bg-secondary rounded-lg overflow-hidden border border-accent shadow-lg p-6 space-y-4">
-        <div className="relative group w-full h-56 mb-4">
-            <img src={editedProject.image} alt={editedProject.title} className="w-full h-full object-cover rounded-md" />
-            {isUploading ? (
-               <div className="absolute inset-0 rounded-md bg-black/80 flex items-center justify-center text-white">
-                    <SpinnerIcon />
-               </div>
-            ) : (
-               <div 
-                  className="absolute inset-0 rounded-md bg-black/60 flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
-                  onClick={() => fileInputRef.current?.click()}
-               >
-                  <span>Upload Image</span>
-                  <input type="file" ref={fileInputRef} onChange={handleImageUpload} className="hidden" accept="image/*"/>
-               </div>
-            )}
+        <h4 className="text-lg font-semibold text-text-secondary border-b border-border pb-2">Manage Images</h4>
+        <div className="grid grid-cols-3 gap-2">
+            {editedProject.images.map((img, index) => (
+                <div key={index} className="relative group">
+                    <img src={img} alt={`Project image ${index + 1}`} className="w-full h-24 object-cover rounded-md"/>
+                    <button onClick={() => handleDeleteImage(index)} className="absolute top-1 right-1 bg-red-600/80 text-white rounded-full w-6 h-6 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity text-sm">&times;</button>
+                </div>
+            ))}
+            <div className="relative">
+                <button 
+                    onClick={() => fileInputRef.current?.click()} 
+                    disabled={isUploading}
+                    className="w-full h-24 border-2 border-dashed border-gray-500 rounded-md flex items-center justify-center text-text-secondary hover:border-accent hover:text-accent transition-colors disabled:opacity-50"
+                >
+                    {isUploading ? <SpinnerIcon /> : <span>+ Add</span>}
+                </button>
+                <input type="file" ref={fileInputRef} onChange={handleImageUpload} className="hidden" accept="image/*" multiple/>
+            </div>
         </div>
+        <h4 className="text-lg font-semibold text-text-secondary border-b border-border pb-2 pt-4">Edit Details</h4>
         <input type="text" value={editedProject.title} onChange={(e) => setEditedProject({...editedProject, title: e.target.value})} className="w-full bg-primary p-2 rounded-md text-2xl font-bold text-accent" placeholder="Project Title" />
         <textarea value={editedProject.description} onChange={(e) => setEditedProject({...editedProject, description: e.target.value})} className="w-full bg-primary p-2 rounded-md h-24 resize-none" placeholder="Project Description" />
         <input 
@@ -103,14 +136,25 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project, isEditing, onDelete,
   const renderDefaultView = () => (
      <div className="bg-secondary rounded-lg overflow-hidden border border-border group transform hover:-translate-y-2 transition-transform duration-300 shadow-lg relative">
         {isEditing && (
-            <div className="absolute top-2 right-2 z-10 space-x-2">
+            <div className="absolute top-2 right-2 z-20 space-x-2">
                  <button onClick={() => setIsCardEditing(true)} className="bg-blue-500/80 text-white px-3 py-1 rounded-md text-sm hover:bg-blue-600">Edit</button>
                  <button onClick={onDelete} className="bg-red-500/80 text-white px-3 py-1 rounded-md text-sm hover:bg-red-600">Delete</button>
             </div>
         )}
-      <div className="relative overflow-hidden">
-        <img src={project.image} alt={project.title} className="w-full h-56 object-cover group-hover:scale-105 transition-transform duration-300" />
+      <div className="relative overflow-hidden h-56">
+        <img src={project.images?.[currentImageIndex] || 'https://picsum.photos/seed/placeholder/600/400'} alt={project.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
          <div className="absolute inset-0 bg-black/40"></div>
+         {project.images && project.images.length > 1 && (
+            <>
+                <button onClick={prevImage} className="absolute left-2 top-1/2 -translate-y-1/2 z-10 bg-black/50 text-white w-8 h-8 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">&lt;</button>
+                <button onClick={nextImage} className="absolute right-2 top-1/2 -translate-y-1/2 z-10 bg-black/50 text-white w-8 h-8 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">&gt;</button>
+                 <div className="absolute bottom-2 left-1/2 -translate-x-1/2 z-10 flex space-x-2">
+                    {project.images.map((_, index) => (
+                        <div key={index} className={`w-2 h-2 rounded-full transition-colors ${currentImageIndex === index ? 'bg-accent' : 'bg-white/50'}`}></div>
+                    ))}
+                </div>
+            </>
+         )}
       </div>
       <div className="p-6">
         <h3 className="text-2xl font-bold mb-2 text-accent">{project.title}</h3>

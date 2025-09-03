@@ -12,8 +12,8 @@ const Hero: React.FC<HeroProps> = ({ profile, setProfile, isEditing }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isUploading, setIsUploading] = useState(false);
   
-  // This is a public, free-to-use API key for imgbb.
-  const IMGBB_API_KEY = 'd70457833a251b14a2754388439e7b2f';
+  // This is a public, free-to-use API key for freeimage.host.
+  const FREEIMAGE_API_KEY = '6d207e02198a847aa98d0a2a901485a5';
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -21,27 +21,28 @@ const Hero: React.FC<HeroProps> = ({ profile, setProfile, isEditing }) => {
 
     setIsUploading(true);
     const formData = new FormData();
-    formData.append('image', file);
+    formData.append('source', file); // Use 'source' for freeimage.host
 
     try {
-      const response = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, {
+      const response = await fetch(`https://freeimage.host/api/1/upload?key=${FREEIMAGE_API_KEY}`, {
         method: 'POST',
         body: formData,
       });
 
+      const result = await response.json();
+
       if (!response.ok) {
-        throw new Error('Image upload failed');
+        throw new Error(result?.error?.message || `Image upload failed with status: ${response.status}`);
       }
 
-      const result = await response.json();
-      if (result.data && result.data.url) {
-        setProfile({ ...profile, avatar: result.data.url });
+      if (result.image && result.image.url) {
+        setProfile({ ...profile, avatar: result.image.url });
       } else {
-        throw new Error('Image URL not found in response');
+        throw new Error('Image URL not found in API response.');
       }
     } catch (error) {
       console.error('Error uploading image:', error);
-      alert('Failed to upload image. Please try another image or try again later.');
+      alert(`Failed to upload image: ${error instanceof Error ? error.message : String(error)}`);
     } finally {
       setIsUploading(false);
     }

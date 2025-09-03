@@ -14,7 +14,7 @@ const Projects: React.FC<ProjectsProps> = ({ projects, setProjects, isEditing })
     const newProject: Project = {
       title: 'New Project',
       description: 'A brief description of your new project.',
-      image: 'https://picsum.photos/seed/new/600/400',
+      images: ['https://picsum.photos/seed/new-project/600/400'],
       tags: ['React', 'New'],
       liveUrl: '#',
       repoUrl: '#'
