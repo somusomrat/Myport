@@ -20,54 +20,89 @@ const App: React.FC = () => {
   const [projects, setProjects] = useState(PROJECTS);
   const [skills, setSkills] = useState(SKILLS);
   const [aboutContent, setAboutContent] = useState<AboutContent>(ABOUT_CONTENT);
+  const [cloudBinId, setCloudBinId] = useState<string | null>(null);
 
 
   useEffect(() => {
-    // Load data from localStorage
-    const savedProfile = localStorage.getItem('portfolio-profile');
-    const savedProjects = localStorage.getItem('portfolio-projects');
-    const savedSkills = localStorage.getItem('portfolio-skills');
-    const savedAbout = localStorage.getItem('portfolio-about');
+    // Attempt to load the portfolio owner's cloud link ID from local storage
+    const savedBinId = localStorage.getItem('portfolio-cloud-bin-id');
+    if (savedBinId) {
+      setCloudBinId(savedBinId);
+    }
 
-    if (savedProfile) setProfile(JSON.parse(savedProfile));
-    if (savedProjects) setProjects(JSON.parse(savedProjects));
-    if (savedSkills) setSkills(JSON.parse(savedSkills));
-    if (savedAbout) setAboutContent(JSON.parse(savedAbout));
+    const hash = window.location.hash;
+    let loadedFromUrl = false;
 
-    // Intro screen timer
-    const timer = setTimeout(() => setIsLoading(false), 2500);
-    return () => clearTimeout(timer);
+    // 1. Prioritize loading from a #live URL hash (for shared links)
+    if (hash && hash.startsWith('#live=')) {
+      const binId = hash.substring(6);
+      setIsLoading(true); // Show loading screen while fetching
+      fetch(`https://api.npoint.io/${binId}`)
+        .then(response => {
+          if (!response.ok) {
+            throw new Error('Network response was not ok');
+          }
+          return response.json();
+        })
+        .then(data => {
+          if (data.profile && data.projects && data.skills && data.aboutContent) {
+            setProfile(data.profile);
+            setProjects(data.projects);
+            setSkills(data.skills);
+            setAboutContent(data.aboutContent);
+            alert('Portfolio loaded from live link!');
+          }
+        })
+        .catch(error => {
+          console.error("Failed to load portfolio from live link:", error);
+          alert("Could not load portfolio from the provided link. It might be invalid or expired.");
+        })
+        .finally(() => {
+          // Use a short delay before hiding loader to allow content to render
+          setTimeout(() => setIsLoading(false), 500);
+        });
+      
+      window.history.replaceState(null, '', window.location.pathname + window.location.search); // Clear hash
+      loadedFromUrl = true;
+
+    } else {
+        // 2. If no #live hash, fall back to localStorage (for the owner)
+        const savedProfile = localStorage.getItem('portfolio-profile');
+        const savedProjects = localStorage.getItem('portfolio-projects');
+        const savedSkills = localStorage.getItem('portfolio-skills');
+        const savedAbout = localStorage.getItem('portfolio-about');
+        
+        if (savedProfile) setProfile(JSON.parse(savedProfile));
+        if (savedProjects) setProjects(JSON.parse(savedProjects));
+        if (savedSkills) setSkills(JSON.parse(savedSkills));
+        if (savedAbout) setAboutContent(JSON.parse(savedAbout));
+        
+        // Regular intro screen timer
+        const timer = setTimeout(() => setIsLoading(false), 2500);
+        return () => clearTimeout(timer);
+    }
   }, []);
 
   // Save data to localStorage whenever it changes
   useEffect(() => {
-    if(!isLoading) {
-      localStorage.setItem('portfolio-profile', JSON.stringify(profile));
-    }
+    if(!isLoading) localStorage.setItem('portfolio-profile', JSON.stringify(profile));
   }, [profile, isLoading]);
 
   useEffect(() => {
-     if(!isLoading) {
-      localStorage.setItem('portfolio-projects', JSON.stringify(projects));
-    }
+    if(!isLoading) localStorage.setItem('portfolio-projects', JSON.stringify(projects));
   }, [projects, isLoading]);
   
   useEffect(() => {
-    if(!isLoading) {
-      localStorage.setItem('portfolio-skills', JSON.stringify(skills));
-    }
+    if(!isLoading) localStorage.setItem('portfolio-skills', JSON.stringify(skills));
   }, [skills, isLoading]);
 
   useEffect(() => {
-    if(!isLoading) {
-      localStorage.setItem('portfolio-about', JSON.stringify(aboutContent));
-    }
+    if(!isLoading) localStorage.setItem('portfolio-about', JSON.stringify(aboutContent));
   }, [aboutContent, isLoading]);
 
   const handleLogin = () => {
-    // In a real app, use a proper auth system.
     const pass = prompt('Enter password to edit:');
-    if (pass === 'weare1ummah') { // Use the user-provided password
+    if (pass === 'weare1ummah') {
       setIsAuthenticated(true);
       setIsEditing(true);
     } else {
@@ -80,60 +115,46 @@ const App: React.FC = () => {
     setIsEditing(false);
   };
 
-  const handleExport = () => {
-    const data = {
-      profile,
-      projects,
-      skills,
-      aboutContent,
-    };
-    const jsonString = `data:text/json;charset=utf-8,${encodeURIComponent(
-      JSON.stringify(data, null, 2)
-    )}`;
-    const link = document.createElement("a");
-    link.href = jsonString;
-    link.download = "portfolio-data.json";
-    link.click();
-    alert('Portfolio data exported!');
+  const handleCloudSync = async () => {
+    const dataToSync = { profile, projects, skills, aboutContent };
+    const endpoint = cloudBinId ? `https://api.npoint.io/${cloudBinId}` : 'https://api.npoint.io/bins';
+
+    try {
+        const response = await fetch(endpoint, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(dataToSync),
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        if (cloudBinId) {
+            alert('✅ Synced to cloud! Your permanent link is updated with the latest changes.');
+            prompt(
+              "Your permanent link (copy and share this):",
+              `${window.location.origin}${window.location.pathname}#live=${cloudBinId}`
+            );
+        } else {
+            const result = await response.json();
+            const newBinId = result.id;
+            if (newBinId) {
+                setCloudBinId(newBinId);
+                localStorage.setItem('portfolio-cloud-bin-id', newBinId);
+                alert('✅ First sync successful! A permanent link has been created for you.');
+                prompt(
+                  "HERE IS YOUR PERMANENT LINK\n\nSave this link! Share it with your friends. They will always see your latest synced version here.",
+                  `${window.location.origin}${window.location.pathname}#live=${newBinId}`
+                );
+            }
+        }
+    } catch (error) {
+        console.error("Cloud sync failed:", error);
+        alert('❌ Failed to sync to the cloud. Please try again.');
+    }
   };
 
-  const handleImport = () => {
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = '.json';
-    input.onchange = (event) => {
-         const file = (event.target as HTMLInputElement).files?.[0];
-         if (!file) return;
-
-         if (window.confirm('Are you sure you want to import this data? This will overwrite your current portfolio.')) {
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                try {
-                    const text = e.target?.result;
-                    if (typeof text === 'string') {
-                        const data = JSON.parse(text);
-                        // Basic validation
-                        if (data.profile && data.projects && data.skills && data.aboutContent) {
-                          setProfile(data.profile);
-                          setProjects(data.projects);
-                          setSkills(data.skills);
-                          setAboutContent(data.aboutContent);
-                          alert('Data imported successfully!');
-                        } else {
-                          alert('Invalid data file. Please check the file format.');
-                        }
-                    }
-                } catch (error) {
-                    console.error("Failed to parse JSON file", error);
-                    alert('Failed to import data. The file might be corrupted.');
-                }
-            };
-            reader.readAsText(file);
-         }
-    };
-    input.click();
-  };
-  
   if (isLoading) {
     return <Intro name={profile.name} />;
   }
@@ -147,8 +168,8 @@ const App: React.FC = () => {
         onLogout={handleLogout}
         isEditing={isEditing}
         setIsEditing={setIsEditing}
-        onExport={handleExport}
-        onImport={handleImport}
+        onCloudSync={handleCloudSync}
+        hasCloudLink={!!cloudBinId}
       />
       <main className="container mx-auto px-4 md:px-8 lg:px-16">
         <Hero 

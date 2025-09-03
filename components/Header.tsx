@@ -21,12 +21,12 @@ interface HeaderProps {
     onLogout: () => void;
     isEditing: boolean;
     setIsEditing: (isEditing: boolean) => void;
-    onExport: () => void;
-    onImport: () => void;
+    onCloudSync: () => void;
+    hasCloudLink: boolean;
 }
 
 
-const Header: React.FC<HeaderProps> = ({ profile, isAuthenticated, onLogin, onLogout, isEditing, setIsEditing, onExport, onImport }) => {
+const Header: React.FC<HeaderProps> = ({ profile, isAuthenticated, onLogin, onLogout, isEditing, setIsEditing, onCloudSync, hasCloudLink }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
 
@@ -37,6 +37,8 @@ const Header: React.FC<HeaderProps> = ({ profile, isAuthenticated, onLogin, onLo
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  const syncButtonText = hasCloudLink ? 'Sync Updates' : 'Get Permanent Link';
 
   return (
     <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled ? 'bg-secondary/80 backdrop-blur-sm border-b border-border' : 'bg-transparent'}`}>
@@ -57,10 +59,9 @@ const Header: React.FC<HeaderProps> = ({ profile, isAuthenticated, onLogin, onLo
             {isAuthenticated ? (
                 <>
                     {isEditing && (
-                      <div className="flex items-center space-x-2">
-                        <button onClick={onImport} className="bg-gray-700 text-white font-semibold py-2 px-4 rounded-md hover:bg-gray-600 transition-all duration-300 text-sm">Import</button>
-                        <button onClick={onExport} className="bg-gray-700 text-white font-semibold py-2 px-4 rounded-md hover:bg-gray-600 transition-all duration-300 text-sm">Export</button>
-                      </div>
+                      <button onClick={onCloudSync} className="bg-blue-600 text-white font-semibold py-2 px-4 rounded-md hover:bg-blue-500 transition-all duration-300 text-sm">
+                        {syncButtonText}
+                      </button>
                     )}
                     <div className="flex items-center space-x-2">
                         <span className={`text-sm ${isEditing ? 'text-accent' : 'text-text-secondary'}`}>{isEditing ? 'Edit Mode' : 'View Mode'}</span>
@@ -99,7 +100,7 @@ const Header: React.FC<HeaderProps> = ({ profile, isAuthenticated, onLogin, onLo
                       {link.name}
                   </a>
               ))}
-              <div className="mt-8 flex flex-col items-center space-y-6">
+              <div className="mt-8 flex flex-col items-center space-y-6 w-full px-8">
                  {isAuthenticated ? (
                     <>
                        <div className="flex items-center space-x-2">
@@ -113,17 +114,16 @@ const Header: React.FC<HeaderProps> = ({ profile, isAuthenticated, onLogin, onLo
                           </label>
                       </div>
                        {isEditing && (
-                         <div className="flex flex-col items-center space-y-4">
-                           <button onClick={() => { onImport(); setIsOpen(false); }} className="bg-gray-700 text-white font-semibold py-3 px-6 rounded-md hover:bg-gray-600 transition-all duration-300 w-full">Import Data</button>
-                           <button onClick={() => { onExport(); setIsOpen(false); }} className="bg-gray-700 text-white font-semibold py-3 px-6 rounded-md hover:bg-gray-600 transition-all duration-300 w-full">Export Data</button>
-                         </div>
+                         <button onClick={() => { onCloudSync(); setIsOpen(false); }} className="bg-blue-600 text-white font-semibold py-3 px-6 rounded-md hover:bg-blue-500 transition-all duration-300 w-full">
+                           {syncButtonText}
+                         </button>
                        )}
-                      <button onClick={() => { onLogout(); setIsOpen(false); }} className="bg-accent/20 text-accent font-semibold py-3 px-6 rounded-md hover:bg-accent/40 transition-all duration-300">
+                      <button onClick={() => { onLogout(); setIsOpen(false); }} className="bg-accent/20 text-accent font-semibold py-3 px-6 rounded-md hover:bg-accent/40 transition-all duration-300 w-full">
                           Logout
                       </button>
                     </>
                 ) : (
-                    <button onClick={() => { onLogin(); setIsOpen(false); }} className="bg-accent text-primary font-semibold py-3 px-6 rounded-md hover:bg-white transition-all duration-300">
+                    <button onClick={() => { onLogin(); setIsOpen(false); }} className="bg-accent text-primary font-semibold py-3 px-6 rounded-md hover:bg-white transition-all duration-300 w-full">
                         Login to Edit
                     </button>
                 )}
