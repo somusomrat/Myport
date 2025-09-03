@@ -118,10 +118,11 @@ const App: React.FC = () => {
   const handleCloudSync = async () => {
     const dataToSync = { profile, projects, skills, aboutContent };
     const endpoint = cloudBinId ? `https://api.npoint.io/${cloudBinId}` : 'https://api.npoint.io/bins';
+    const method = cloudBinId ? 'PUT' : 'POST';
 
     try {
         const response = await fetch(endpoint, {
-            method: 'POST',
+            method: method,
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(dataToSync),
         });
